@@ -1,5 +1,7 @@
 import re
 import math
+import itertools
+import string
 
 def rot(source, offset, decode = False):
     
@@ -30,7 +32,7 @@ def compute_freq_from_file(filepath):
 
     freqdict = {}
 
-    with open(filepath, 'r') as file:
+    with open(filepath, 'r',encoding='UTF8') as file:
         for line in file:
             pure_line = remove_whitespaces(line)
             update_freq(pure_line, freqdict)
@@ -60,52 +62,62 @@ def compute_prob(freqdict):
     
     return probdict
 
-def entropy(text):
-    freqdict = {}
-    update_freq(text, freqdict)
-    probdict = compute_prob(freqdict)
-    result = 0
-
-    for char in text:
-        result -= probdict[char] * math.log(probdict[char],2)
-    
-    return result
-
-
 def separator(name):
     print("\n**********************")
     print(name)
     print("**********************")
 
+
+def read_encoded_file(filepath,offset):
+    result = ''
+    with open(filepath, 'r',encoding='UTF8') as file:
+        for line in file:
+            result += rot(line,offset,True)
+    return result
 #Statistic
 
+def findMax(diction):
+    result = {"a": 0}
+    for key in diction.keys():
+        if diction[key] > result[list(result.keys())[0]]:
+            result = {key: diction[key]}
+    return result       
 
 #ROT
-separator("ROT")
+#separator("ROT")
 
-source = "tEsT123"
-offset = 10
+#source = "tEsT123"
+#offset = 10
 
-print("Source:",source)
+#print("Source:",source)
 
-res = rot(source, offset)
+#res = rot(source, offset)
 
-print("Result:", res)
+#print("Result:", res)
 
-encoded = rot(res,offset, True)
-if source == encoded:
-    print("Decoding works")
+#encoded = rot(res,offset, True)
+#if source == encoded:
+#    print("Decoding works")
 
 #Vigenere
-separator("Vigenere")
+#separator("Vigenere")
 
-source = "aBc1ruT3"
-key = "abcd"
+#source = "aBc1ruT3"
+#key = "abcd"
 
-print("Source:",source)
+#print("Source:",source)
 
-res = vigenere(source, key)
+#res = vigenere(source, key)
 
-print("Result:", res)
+#print("Result:", res)
 
-print(compute_freq_from_file('C:/Users/Z6SZW/Downloads/masc_500k_texts-written/written/journal/Article247_66.txt'))
+#ref_dict = compute_freq_from_file('C:/Users/user/Downloads/written/journal/Article247_66.txt')
+#ref_prob = compute_prob(ref_dict)
+#ref_res = ord(max(ref_prob,key=lambda key: ref_prob[key]))
+#enc_dict = compute_freq_from_file('C:/Users/user/Downloads/crypto.rot')
+#enc_prob = compute_prob(enc_dict)
+#enc_res = ord(max(enc_prob,key=lambda key: enc_prob[key]))
+#print(read_encoded_file('C:/Users/user/Downloads/crypto.rot', abs(enc_res - ref_res)))
+
+#print(findMax(compute_prob(compute_freq_from_file('C:/Users/user/Downloads/written/journal/Article247_66.txt'))))
+#print(findMax(compute_prob(compute_freq_from_file('C:/Users/user/Downloads/textpl.txt'))))
