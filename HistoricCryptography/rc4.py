@@ -1,6 +1,8 @@
 import math
 import string
 import itertools
+import binascii
+import os
 
 import rot_vige as rv
 
@@ -28,11 +30,10 @@ def rc4(text, key):
     key = prga(S)
     result = ""
     for char in text:
-        result += "%02X" % (ord(char) ^ next(key))
+        result += "%02X" % (char ^ next(key))
     return result
 
-   
-def entropy(text):
+def get_entropy(text):
     freqdict = {}
     rv.update_freq(text, freqdict)
     probdict = rv.compute_prob(freqdict)
@@ -43,15 +44,34 @@ def entropy(text):
     
     return -result
 
+class AttackResult:
+    def __init__(self, text, key, entropy):
+        self.text = text
+        self.key = key
+        self.entropy = entropy
+
 def force_decode_rc4(text, keylength):
-    res_key = ""
-    res_text = ""
-    res_entropy = None
 
-    for key in itertools.combinations_with_replacement(string.ascii_lowercase,keylength):
+    result = AttackResult("","",None)
+    i = 0
+    for key in itertools.product(string.ascii_lowercase,repeat=keylength):
         key = ''.join(key)
+        decoded = rc4(text, key)
+        entropy = get_entropy(decoded)
+        i += 1
+        print("{0:.2f}%".format(100*i/(26**3)), end="\r")
+        if result.entropy is None or entropy < result.entropy:
+            result = AttackResult(decoded,key,entropy)
+    print("\n"+result.key)
 
-print(rc4("dupa","huj"))
+    return result
+
+with open("C:/Users/Z6SZW/Private/DataProtection/HistoricCryptography/crypto.rc4", 'rb') as file:
+    result = ""
+    text = file.read(1024)
+    result = force_decode_rc4(text,3).text
+    print(bytearray.fromhex(result).decode())
+
  
                 
         
