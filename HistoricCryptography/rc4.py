@@ -25,7 +25,7 @@ def prga(text):
         key = text[(text[i] + text[j]) % 256]
         yield key
 
-def rc4(text, key):
+def decode_rc4(text, key):
     S = ksa(key)
     key = prga(S)
     result = ""
@@ -56,7 +56,7 @@ def force_decode_rc4(text, keylength):
     i = 0
     for key in itertools.product(string.ascii_lowercase,repeat=keylength):
         key = ''.join(key)
-        decoded = rc4(text, key)
+        decoded = decode_rc4(text, key)
         entropy = get_entropy(decoded)
         i += 1
         print("{0:.2f}%".format(100*i/(26**3)), end="\r")
@@ -66,12 +66,10 @@ def force_decode_rc4(text, keylength):
 
     return result
 
-with open("C:/Users/Z6SZW/Private/DataProtection/HistoricCryptography/crypto.rc4", 'rb') as file:
-    result = ""
-    text = file.read(1024)
-    result = force_decode_rc4(text,3).text
-    print(bytearray.fromhex(result).decode())
-
- 
+#with open("C:/Users/user/Downloads/crypto.rc4", 'rb') as file:
+#    result = ""
+#    text = file.read(1024)
+#    result = force_decode_rc4(text,3).text
+#    print(bytearray.fromhex(result).decode())
                 
         
