@@ -41,7 +41,6 @@ def get_entropy(text):
 
     for char in probdict.keys():
         result += probdict[char] * math.log(probdict[char],2)
-    
     return -result
 
 class AttackResult:
@@ -66,7 +65,7 @@ def force_decode_rc4(text, keylength):
 
     return result
 
-#with open("C:/Users/user/Downloads/crypto.rc4", 'rb') as file:
+#with open("/home/welters/Downloads/crypto.rc4", 'rb') as file:
 #    result = ""
 #    text = file.read(1024)
 #    result = force_decode_rc4(text,3).text
