@@ -4,24 +4,55 @@ import crypt
 import string
 import random
 import itertools
+import passlib.hash
+import timeit
 
 class Htpasswd:
     filepath = ''
-
+    users = {}
     def __init__(self, filepath):
         self.filepath = filepath
 
+    def read(self):
+        self.users = {}
+        with open(self.filepath,  'r') as file:
+            for line in file:
+                username, password = line.strip().split(':')
+                self.users[username] = password
+            
+    def save(self):
+        with open(self.filepath,  'w') as file:
+            for key in self.users:
+                line = key + ':' + self.users[key]
+                file.write(line + '\n')
+        print('saved')
+
     def CheckIfUserExists(self, username, password):
-        command = ['sudo', 'htpasswd', '-vb', self.filepath, username, password]
-        result = subprocess.run(command)
-        if result.returncode != 0:
-            print('User with provided password dont exists in database')
-            return
-        print('User with provided password exists in database')
+        if  not self.users.keys().__contains__(username):
+            print('username is not in database')
+
+        salt = self.users[username].split('$')[2]
+        password = passlib.hash.apr_md5_crypt.hash(password, salt=salt)
+        if password == self.users[username]:
+            return True
+        else:
+            return False
+        
+
 
     def ChangePassword(self, username):
-        command = ['sudo', 'htpasswd', self.filepath, username]
-        result = subprocess.run(command)
+        print('Old password:')
+        oldPassword = input()
+        if not self.CheckIfUserExists(username, oldPassword):
+            print('wrong password')
+            return
+        salt = self.users[username].split('$')[2]
+        print('New password:')
+        newPassword = input()
+        password = passlib.hash.apr_md5_crypt.hash(newPassword, salt=salt)
+        self.users[username] = password
+
+
 
     def AddUser(self, username, password):
         command = ['sudo', 'htpasswd','-b', self.filepath, username, password]
@@ -30,6 +61,21 @@ class Htpasswd:
             print('can not create user with specified name')
             return
         print('user created')
+
+    def BruteForce_md5(self, passlen,method):
+        hashes = self.users.values()
+        result = {}
+        for h in hashes:
+            for passwd in itertools.product(string.ascii_lowercase, repeat=passlen):
+                passwd = ''.join(passwd)
+                pass_hash = method(passwd, salt = h.split('$')[2])            
+                print(pass_hash)
+                if h == pass_hash:
+                    result[h] = passwd
+                    break
+        return result
+
+    
 
 def md5sum(password):
 
@@ -56,26 +102,19 @@ def differentFile(data_len, result):
         file.write(data)
         
 
-def bruteforce(hashes, dictionary, passlen):
-    result = dict()
-    for passwd in itertools.product(dictionary, repeat=passlen):
-        passwd = ''.join(passwd)
-        for h in hashes:
-            pass_hash = crypt.crypt(passwd, h)
-            if h == pass_hash:
-                result[h] = passwd
-                hashes.remove(h)
-        if len(hashes) == 0:
-            break
-    return result
+def md5_ascii():
+    crypt.crypt(''.join(random.choices(string.ascii_lowercase, k=3)), crypt.METHOD_MD5)
 
-with open('text','r') as file:
-    data = file.read()
-    result = trivial_hash(data)
-    print(result)
-    differentFile(100, result)
 
-with open('text-new','r') as file:
-    data = file.read()
-    result = trivial_hash(data)
-    print(result)
+def crypt_ascii():
+    crypt.crypt(''.join(random.choices(string.ascii_lowercase, k=3)), crypt.METHOD_CRYPT)
+
+
+def compare_time(iterations):
+    m5time = timeit.timeit(md5_ascii, number=iterations)
+    print(f'md5: {iterations / m5time} hashes per second.' )
+    cryptime = timeit.timeit(crypt_ascii, number=iterations)
+    print(f'crypt: {iterations / cryptime} hashes per second')
+
+
+compare_time(10000)
