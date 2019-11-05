@@ -32,9 +32,9 @@ def decryptCTR(encrypted, key):
 
 def mapper(i):
     offset = i * DES.block_size
-    block = bytes(inputData[offset:offset + DES.block_size])
-    decrypted = des.decrypt(block)
-    outputData[offset:offset + DES.block_size] = bytearray(decrypted)
+    block = inputData[offset:offset + DES.block_size]        
+    encrypted = des.encrypt(bytes(block))   
+    outputData[offset:offset + DES.block_size] = bytearray(encrypted)
     return i
 
 with open('text','r') as file:
@@ -46,24 +46,19 @@ blocksNumber = int(len(text) / DES.block_size)
 
 starttime = time.time()
 encrypted = encryptCTR(text,key)
-print(f'ctr: {time.time() - starttime}')
 
 starttime = time.time()
 decrypted = decryptCTR(encrypted, key)
-print("".join(map(chr, decrypted)))
-print(f'decrypt ctr : {time.time() - starttime}')
 
 
 des = DES.new(key, DES.MODE_CTR, counter=counter)
-inputData = multiprocessing.RawArray(ctypes.c_ubyte, encrypted)
-outputData = multiprocessing.RawArray(ctypes.c_ubyte, encrypted)
+inputData = multiprocessing.RawArray(ctypes.c_ubyte, bytearray(text,'utf-8'))
+outputData = multiprocessing.RawArray(ctypes.c_ubyte, bytearray(text,'utf-8'))
 pool = multiprocessing.Pool(4)
 starttime = time.time()
 pool.map(mapper, range(blocksNumber))
 endtime = time.time()
 
-decrypted = "".join(map(chr, bytes(outputData)))
-decrypted = decrypted.replace('"\"n','\n')
-print(decrypted)
+decrypted = decryptCTR(bytes(outputData), key)
 
-print(f'ctr: {endtime - starttime}')
+print("".join(map(chr, decrypted)))
